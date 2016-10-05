@@ -1,0 +1,216 @@
+	
+NEW 
+.
+Folder Path
+My Drive
+CODE VAULT
+Folders and views
+My Drive
+Shared with me
+Recent
+Google Photos
+Starred
+Trash
+Get Drive for PC
+5 GB of 15 GB used
+Upgrade storage
+NAME 
+Files
+.
+
+Text
+AccessserialportstreamandplotMATLAB.txt
+
+Text
+analyzeFP.m
+
+Text
+DelayMs.txt
+
+Text
+DREWcodes.txt
+
+Text
+EDPADCUART.txt
+
+Text
+EDPPIC16f688 adc+uart.txt
+
+Google Docs
+EDPPIC16f688 adc+uart.txt
+
+Text
+EDPPIC32reciever.txt
+
+Text
+EDPPIC32Transmit.txt
+
+Text
+FillPat.txt
+
+Text
+Jacktable.txt
+
+Text
+lab3_QRS Detection.m
+
+Text
+Lab3772.m
+
+Text
+OC.txt
+
+Text
+Oledchar.txt
+
+Text
+OLEDdriver.txt
+
+Text
+OLEDgrph.txt
+
+Text
+OLEDmain.txt
+
+Text
+PIC16F886ADCUART.txt
+
+Text
+QRSW.m
+
+Text
+Rehablab2FES.m
+
+Text
+RobsNeuralNetworkFunction.m
+
+Text
+spinmon.txt
+
+Text
+TENSmachine.txt
+All selections cleared
+
+/*---------------------------------------------------------------------------*/
+/*                          TENS MACHINE                                */
+/*                                                                              */
+/*                      Author: Andrew J. Marques                               */
+/*                                                                              */
+/*  Modification History                                                        */
+/*          11/12/2015 PWM used to to create stimulation wave form       */
+/*          11/13/2015 */
+#include <p32xxxx.h>
+#include <plib.h>
+#include <inttypes.h>
+#include <string.h>
+
+
+/* ------------------------------------------------------------ */
+/*				PIC32 Configuration Settings		*/
+/* ------------------------------------------------------------ */
+
+/* Oscillator Settings
+*/
+#pragma config FNOSC		= PRIPLL	// Oscillator selection
+#pragma config POSCMOD		= XT		// Primary oscillator mode
+#pragma config FPLLIDIV 	= DIV_4		// PLL input divider
+#pragma config FPLLMUL		= MUL_15	// PLL multiplier
+#pragma config FPLLODIV 	= DIV_32		// PLL output divider
+#pragma config FPBDIV		= DIV_8		// Peripheral bus clock divider
+#pragma config FSOSCEN		= OFF		// Secondary oscillator enable
+
+/* Clock control settings
+*/
+#pragma config IESO		= OFF		// Internal/external clock switchover
+#pragma config FCKSM		= CSDCMD	// Clock switching (CSx)/Clock monitor (CMx)
+#pragma config OSCIOFNC		= OFF		// Clock output on OSCO pin enable
+
+/* USB Settings
+*/
+//#pragma config UPLLEN		= OFF		// USB PLL enable
+//#pragma config UPLLIDIV	= DIV_2		// USB PLL input divider
+
+/* Other Peripheral Device settings
+*/
+#pragma config FWDTEN		= OFF		// Watchdog timer enable
+#pragma config WDTPS		= PS1024	// Watchdog timer postscaler
+
+/* Code Protection settings
+*/
+#pragma config CP		= OFF		// Code protection
+#pragma config BWP		= OFF		// Boot flash write protect
+#pragma config PWP		= OFF		// Program flash write protect
+
+
+
+/* ------------------------------------------------------------ */
+/*			Local Type Definitions							*/
+/* ------------------------------------------------------------ */
+
+#define	fTrue	1
+#define fFalse	0
+#define	cntMsDelay	10000			//timer 1 delay for 1ms
+#define CTS _RD9
+#define RTS _RF6
+#define TRx TRISFbits.TRISF2
+
+
+
+/* ------------------------------------------------------------ */
+/*			Function Prototypes							*/
+/* ------------------------------------------------------------ */
+
+int getU1();
+void initU1();
+void DelayMs(int);
+
+void initOC1(void){
+    OC1CON = 0x0006;
+    PR2 = 60000; //set period of PWM
+    OC1RS = 100; //set time up
+    OC1CONSET = 0x8000;     // Enable Output Compare Module 1
+}
+
+void initOC2(void){
+    OC2CON = 0x000E;
+    PR3 = 20000;
+    OC2RS = 100;
+    OC2CONSET = 0x8000;
+}
+
+
+int main(){
+
+    int dcheck, i, j, k=0 ,digarr[1000];
+
+    T2CONSET = 0x8000;
+    T3CONSET = 0x8000;
+    TRISE = 0x00;//configure LED's for output
+    TRISD = 0x00;
+
+    OpenTimer1(0x8004, 0xFFFF);
+
+    initOC1();
+    DelayMs(75);
+    initOC2();
+
+    while(fTrue) {
+        SetDCOC1PWM(5000);
+        SetDCOC2PWM(10000);
+
+
+    }
+
+}
+
+void
+DelayMs(int cms)
+	{
+	int		ims;
+
+	for (ims=0; ims<cms; ims++) {
+		WriteTimer1(0);
+		while (ReadTimer1() < cntMsDelay);
+	}
+
+}
