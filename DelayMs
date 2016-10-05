@@ -1,0 +1,59 @@
+#include <p32xxxx.h>
+#include <plib.h>
+#include <inttypes.h>
+
+/* ------------------------------------------------------------ */
+/*				PIC32 Configuration Settings		*/
+/* ------------------------------------------------------------ */
+
+/* Oscillator Settings
+*/
+#pragma config FNOSC		= PRIPLL	// Oscillator selection
+#pragma config POSCMOD		= XT		// Primary oscillator mode
+#pragma config FPLLIDIV 	= DIV_2		// PLL input divider
+#pragma config FPLLMUL		= MUL_20	// PLL multiplier
+#pragma config FPLLODIV 	= DIV_1		// PLL output divider
+#pragma config FPBDIV		= DIV_8		// Peripheral bus clock divider
+#pragma config FSOSCEN		= OFF		// Secondary oscillator enable
+
+/* Clock control settings
+*/
+#pragma config IESO		= OFF		// Internal/external clock switchover
+#pragma config FCKSM		= CSDCMD	// Clock switching (CSx)/Clock monitor (CMx)
+#pragma config OSCIOFNC		= OFF		// Clock output on OSCO pin enable
+
+/* Other Peripheral Device settings
+*/
+#pragma config FWDTEN		= OFF		// Watchdog timer enable
+#pragma config WDTPS		= PS1024	// Watchdog timer postscaler
+
+/* Code Protection settings
+*/
+#pragma config CP		= OFF		// Code protection
+#pragma config BWP		= OFF		// Boot flash write protect
+#pragma config PWP		= OFF		// Program flash write protect
+
+int main(){
+    TRISE = 0x00;  //LED's toconfirm timer operation
+    OpenTimer1(0x8004, 0xFFFF); //timermust be opened for DelayMs to run
+    LATE = 0x00;
+    while(1){
+        DelayMs(2);
+        LATE = 0x01;
+        DelayMs(2);
+        LATE = 0x00;
+    }
+
+}
+
+void
+DelayMs(int cms)
+	{
+	int ims;
+
+	for (ims=0; ims<cms; ims++) {
+		WriteTimer1(0);
+		while (ReadTimer1() < 10000);
+	}
+
+}
