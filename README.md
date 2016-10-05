@@ -3,4 +3,4 @@ Source codes contain code for manipulating peripherals including OC, UART, ADC a
 
 DelayMs - Useful delay function.
 
-TENSmachine - Code using OC to drive a transcutaneous electrical neural stimulator.
+TENSmachine - Code using Output Compare to drive a transcutaneous electrical neural stimulator.
