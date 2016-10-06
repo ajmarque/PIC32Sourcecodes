@@ -1,0 +1,159 @@
+/*---------------------------------------------------------------------------*/
+/*                                 UART                            */
+/*                                                                              */
+/*                      Author: Andrew J. Marques                               */
+/*                                                                              */
+/*  Modification History                                                        */
+/*          11/12/2015 UART code created basic 9600 BR for experimenting        */
+/*          11/13/2015 */
+
+#include <p32xxxx.h>
+#include <plib.h>
+#include <inttypes.h>
+#include "delay.h"
+#include <string.h>
+#include "DREWcodes.h"
+
+
+/* ------------------------------------------------------------ */
+/*				PIC32 Configuration Settings		*/
+/* ------------------------------------------------------------ */
+
+/* Oscillator Settings
+*/
+#pragma config FNOSC		= PRIPLL	// Oscillator selection
+#pragma config POSCMOD		= XT		// Primary oscillator mode
+#pragma config FPLLIDIV 	= DIV_2		// PLL input divider
+#pragma config FPLLMUL		= MUL_20	// PLL multiplier
+#pragma config FPLLODIV 	= DIV_1		// PLL output divider
+#pragma config FPBDIV		= DIV_4		// Peripheral bus clock divider
+#pragma config FSOSCEN		= OFF		// Secondary oscillator enable
+
+/* Clock control settings
+*/
+#pragma config IESO		= OFF		// Internal/external clock switchover
+#pragma config FCKSM		= CSDCMD	// Clock switching (CSx)/Clock monitor (CMx)
+#pragma config OSCIOFNC		= OFF		// Clock output on OSCO pin enable
+
+/* USB Settings
+*/
+//#pragma config UPLLEN		= OFF		// USB PLL enable
+//#pragma config UPLLIDIV	= DIV_2		// USB PLL input divider
+
+/* Other Peripheral Device settings
+*/
+#pragma config FWDTEN		= OFF		// Watchdog timer enable
+#pragma config WDTPS		= PS1024	// Watchdog timer postscaler
+
+/* Code Protection settings
+*/
+#pragma config CP		= OFF		// Code protection
+#pragma config BWP		= OFF		// Boot flash write protect
+#pragma config PWP		= OFF		// Program flash write protect
+
+
+
+/* ------------------------------------------------------------ */
+/*			Local Type Definitions							*/
+/* ------------------------------------------------------------ */
+
+#define	fTrue	1
+#define fFalse	0
+#define	cntMsDelay	10000			//timer 1 delay for 1ms
+#define CTS _RD9
+#define RTS _RF6
+#define TRx TRISFbits.TRISF2
+
+
+
+/* ------------------------------------------------------------ */
+/*			Function Prototypes							*/
+/* ------------------------------------------------------------ */
+
+double getU1();
+void initU1();
+void sendU1(double);
+void DelayMs(int);
+
+/* ------------------------------------------------------------ */
+/*			Function MAIN							*/
+/* ------------------------------------------------------------ */
+
+
+int main(){
+
+    double dcheck;
+    TRISE = 0x00;//0b00000000configure PORTE as output
+    TRISD = 0x00;
+    initU1();       //initialize UART1
+
+    OpenTimer1(0x8004, 0xFFFF);
+ 
+    while(fTrue) {
+
+        dcheck = getU1();
+        LATE = dcheck;
+        sendU1(dcheck);
+
+    }
+
+}
+
+void
+DelayMs(int cms)
+	{
+	int		ims;
+
+	for (ims=0; ims<cms; ims++) {
+		WriteTimer1(0);
+		while (ReadTimer1() < cntMsDelay);
+	}
+
+}
+
+void initU1(){
+
+    U1BRG = 10; //for  ~115200 baud rate, with BRG set to high, FPB = 80 000 000/4 = 20 000 000, BR = FPB/(16*(BRG+1))
+                    // confirmed less than 2% error
+    U1MODE = 0x8000; //enable uart set baud rate generator to low speed bit3 = 0
+    //U1MODE = 0x8004; //enable UART set baud rate generator to high speed bit3 = 1
+    U1STA = 0x1400; //enable reciever/transmitter
+    TRx = 1; // SET PORT F BIT 2 as input, this is PIN 0 on  J2 i/o shield
+    RTS = 1;
+}
+
+double getU1(){
+    RTS = 0;
+    while(!U1STAbits.URXDA);
+    RTS = 1;
+    return U1RXREG;
+}
+
+void sendU1(double a){
+    while(U1STAbits.UTXBF);
+    U1TXREG = a;
+}
+/*int getU1(){
+
+    int i, j, k;
+    int frame[14];
+
+    RTS = 0; //request to send yes
+ 
+    while(U1RXREG != 0x7E); //wait for start delimmiter
+    frame[0]=U1RXREG;
+    for(i = 1; i <14; i++){
+        while(U1RXREG == frame[i-1]); //wait for next byte, clock cycless are too fast this has been proven.
+        frame[i]= U1RXREG;
+    }//capture remaining bytes
+    return frame[12]; //return analog value from transmitter = byte 12
+    RTS = 1; //request to send no
+
+}*/
+
+    //OC1CON = 0x0006;
+    //T2CONSET = 0x8000;
+    //PR2 = 255; //set period of PWM
+    //OC1RS = 100; //set time up
+    //OC1CONSET = 0x8000;     // Enable Output Compare Module 1
+     //SetDCOC1PWM((dcheck));
